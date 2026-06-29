@@ -1,0 +1,32 @@
+{% extends 'blog/base.html' %}
+{% block title %}{{ post.title }}{% endblock %}
+{% block content %}
+    <h1>{{ post.title }}</h1>
+    <div class="meta">By {{ post.author }} on {{ post.created_at|date:"M d, Y" }}</div>
+    <p>{{ post.content|linebreaks }}</p>
+
+    {% if user == post.author %}
+        <a class="btn" href="{% url 'post_update' post.pk %}">Edit</a>
+        <a class="btn btn-danger" href="{% url 'post_delete' post.pk %}">Delete</a>
+    {% endif %}
+
+    <h3>Comments ({{ post.comments.count }})</h3>
+    {% for comment in post.comments.all %}
+        <div class="comment">
+            <strong>{{ comment.author_name }}</strong>
+            <span class="meta">{{ comment.created_at|date:"M d, Y H:i" }}</span>
+            <p>{{ comment.text }}</p>
+        </div>
+    {% empty %}
+        <p>No comments yet.</p>
+    {% endfor %}
+
+    <h3>Leave a comment</h3>
+    <form method="post">
+        {% csrf_token %}
+        {{ comment_form.as_p }}
+        <button type="submit">Submit Comment</button>
+    </form>
+
+    <p><a href="{% url 'post_list' %}">&larr; Back to all posts</a></p>
+{% endblock %}

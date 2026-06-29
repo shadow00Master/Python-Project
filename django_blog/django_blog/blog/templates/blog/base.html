@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>{% block title %}Blog{% endblock %}</title>
+    <style>
+        body { font-family: Arial, sans-serif; max-width: 700px; margin: 40px auto; color: #222; line-height: 1.5; }
+        nav { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #ddd; padding-bottom: 12px; margin-bottom: 24px; }
+        nav a { margin-left: 12px; text-decoration: none; color: #2563eb; }
+        nav .brand { font-weight: bold; font-size: 1.2em; color: #111; }
+        .post { border-bottom: 1px solid #eee; padding: 16px 0; }
+        .post h2 a { color: #111; text-decoration: none; }
+        .meta { color: #888; font-size: 0.85em; }
+        .messages { list-style: none; padding: 0; }
+        .messages li { background: #ecfdf5; border: 1px solid #34d399; padding: 8px 12px; border-radius: 4px; margin-bottom: 10px; }
+        .form-control { width: 100%; padding: 8px; margin: 6px 0 14px; box-sizing: border-box; }
+        button, .btn { background: #2563eb; color: white; border: none; padding: 8px 16px; border-radius: 4px; cursor: pointer; text-decoration: none; display: inline-block; }
+        .btn-danger { background: #dc2626; }
+        .comment { border-top: 1px solid #f0f0f0; padding: 10px 0; }
+    </style>
+</head>
+<body>
+    <nav>
+        <a class="brand" href="{% url 'post_list' %}">My Blog</a>
+        <div>
+            {% if user.is_authenticated %}
+                <span>Hi, {{ user.username }}</span>
+                <a href="{% url 'post_create' %}">New Post</a>
+                <a href="{% url 'logout' %}">Logout</a>
+            {% else %}
+                <a href="{% url 'login' %}">Login</a>
+                <a href="{% url 'register' %}">Register</a>
+            {% endif %}
+        </div>
+    </nav>
+
+    {% if messages %}
+        <ul class="messages">
+            {% for message in messages %}<li>{{ message }}</li>{% endfor %}
+        </ul>
+    {% endif %}
+
+    {% block content %}{% endblock %}
+</body>
+</html>

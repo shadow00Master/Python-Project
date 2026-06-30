@@ -1,0 +1,42 @@
+[
+  {
+    "type": "TextileProduct",
+    "product_id": "BS001",
+    "name": "Cotton Bedsheet (King)",
+    "price": 1800.0,
+    "quantity": 22,
+    "fabric": "Cotton"
+  },
+  {
+    "type": "TextileProduct",
+    "product_id": "PL001",
+    "name": "Microfiber Pillow",
+    "price": 650.0,
+    "quantity": 40,
+    "fabric": "Cotton"
+  },
+  {
+    "type": "ClearanceProduct",
+    "product_id": "BL001",
+    "name": "Winter Blanket - Last Season",
+    "price": 2200.0,
+    "quantity": 9,
+    "discount_percent": 30
+  },
+  {
+    "type": "ImportedProduct",
+    "product_id": "MP001",
+    "name": "Imported Mattress Protector",
+    "price": 3200.0,
+    "quantity": 15,
+    "import_duty_percent": 12
+  },
+  {
+    "type": "TextileProduct",
+    "product_id": "AA001",
+    "name": "Cousion",
+    "price": 350.0,
+    "quantity": 55,
+    "fabric": "Cotton + Polyster"
+  }
+]

@@ -1,0 +1,112 @@
+{% extends 'base.html' %}
+{% block title %}Inventory{% endblock %}
+{% block content %}
+<section class="page-heading">
+    <div>
+        <div class="eyebrow">Overview</div>
+        <h1>Your inventory</h1>
+        <p>Keep track of products, stock levels, and value in one place.</p>
+    </div>
+    <a class="btn btn-primary" href="{% url 'Inventory:add_Product' %}"><svg class="i" aria-hidden="true"><use href="#i-plus"/></svg> Add product</a>
+</section>
+
+<section class="stats-grid" aria-label="Inventory summary">
+    <article class="stat-card"><span class="stat-label">Products</span><strong class="stat-value" id="stat-products">{{ inventory|length }}</strong><span class="stat-sub">in your catalog</span></article>
+    <article class="stat-card tone-ok"><span class="stat-label">Units in stock</span><strong class="stat-value" id="stat-units">0</strong><span class="stat-sub">across all products</span></article>
+    <article class="stat-card tone-ok"><span class="stat-label">Stock value</span><strong class="stat-value" id="stat-value">0</strong><span class="stat-sub">price × quantity</span></article>
+    <article class="stat-card tone-warn"><span class="stat-label">Needs restocking</span><strong class="stat-value" id="stat-low">0</strong><span class="stat-sub">5 units or fewer</span></article>
+</section>
+
+<section class="inventory-panel" aria-labelledby="inventory-title">
+    <div class="panel-heading">
+        <div><h2 id="inventory-title">Product list</h2><p>Browse and manage your current stock</p></div>
+        <span class="count-pill">{{ inventory|length }} item{{ inventory|length|pluralize }}</span>
+    </div>
+    {% if inventory %}
+        {% regroup inventory by category as category_list %}
+        <div class="table-tools">
+            <label class="search-wrap">
+                <svg class="i" aria-hidden="true"><use href="#i-search"/></svg>
+                <input class="form-control" id="product-search" type="search" placeholder="Search products..." aria-label="Search products">
+            </label>
+            <select class="form-select" id="category-filter" aria-label="Filter by category">
+                <option value="">All categories</option>
+                {% for category in category_list %}<option value="{{ category.grouper|lower }}">{{ category.grouper }}</option>{% endfor %}
+            </select>
+            <button class="chip" id="low-filter" type="button" aria-pressed="false">Low stock only</button>
+        </div>
+        <div class="table-responsive">
+            <table class="data-table inv-table">
+                <thead><tr><th scope="col">Product</th><th scope="col">Category</th><th scope="col">Price</th><th scope="col">In stock</th><th scope="col">Stock value</th><th scope="col">Actions</th></tr></thead>
+                <tbody id="product-rows">
+                    {% for product in inventory %}
+                        <tr data-category="{{ product.category|lower }}" data-search="{{ product.name|lower }} {{ product.product_id|lower }} {{ product.category|lower }}" data-qty="{{ product.qty }}" data-value="{{ product.total_amount }}">
+                            <td><div class="product-cell"><strong>{{ product.name }}</strong><small>{{ product.product_id }}</small></div></td>
+                            <td><span class="category-pill">{{ product.category }}</span></td>
+                            <td>{{ product.price }}</td>
+                            <td><span class="stock{% if product.qty <= 0 %} is-out{% elif product.qty <= 5 %} is-low{% endif %}">{{ product.qty }}</span></td>
+                            <td>{{ product.total_amount }}</td>
+                            <td><div class="actions">
+                                <a class="action-link" href="{% url 'Inventory:update_Product' pk=product.pk %}" aria-label="Edit {{ product.name }}" title="Edit product"><svg class="i" aria-hidden="true"><use href="#i-edit"/></svg></a>
+                                <form action="{% url 'Inventory:delete_Product' pk=product.pk %}" method="post" onsubmit="return confirm('Delete {{ product.name|escapejs }}?')">
+                                    {% csrf_token %}<button class="delete-button" type="submit" aria-label="Delete {{ product.name }}" title="Delete product"><svg class="i" aria-hidden="true"><use href="#i-trash"/></svg></button>
+                                </form>
+                            </div></td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        <div class="no-results" id="no-results">No products match your search.</div>
+    {% else %}
+        <div class="empty-state">
+            <span class="empty-icon" aria-hidden="true"><svg class="i"><use href="#i-box"/></svg></span>
+            <h3>Your inventory starts here</h3>
+            <p>Add your first product to begin tracking stock.</p>
+            <a class="btn btn-primary" href="{% url 'Inventory:add_Product' %}"><svg class="i" aria-hidden="true"><use href="#i-plus"/></svg> Add your first product</a>
+        </div>
+    {% endif %}
+</section>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    (function () {
+        var rows = [].slice.call(document.querySelectorAll('#product-rows tr'));
+        var units = 0, value = 0, low = 0;
+        rows.forEach(function (r) {
+            var q = parseInt(r.dataset.qty, 10) || 0;
+            units += q; value += parseInt(r.dataset.value, 10) || 0;
+            if (q <= 5) low += 1;
+        });
+        document.getElementById('stat-units').textContent = units.toLocaleString();
+        document.getElementById('stat-value').textContent = value.toLocaleString();
+        document.getElementById('stat-low').textContent = low.toLocaleString();
+
+        var search = document.getElementById('product-search');
+        var cat = document.getElementById('category-filter');
+        var lowBtn = document.getElementById('low-filter');
+        if (!search || !cat || !lowBtn) return;
+        var none = document.getElementById('no-results');
+        function apply() {
+            var q = search.value.trim().toLowerCase(), c = cat.value;
+            var onlyLow = lowBtn.getAttribute('aria-pressed') === 'true';
+            var visible = 0;
+            rows.forEach(function (r) {
+                var ok = r.dataset.search.indexOf(q) !== -1
+                    && (!c || r.dataset.category === c)
+                    && (!onlyLow || (parseInt(r.dataset.qty, 10) || 0) <= 5);
+                r.hidden = !ok;
+                if (ok) visible += 1;
+            });
+            none.style.display = visible ? 'none' : 'block';
+        }
+        search.addEventListener('input', apply);
+        cat.addEventListener('change', apply);
+        lowBtn.addEventListener('click', function () {
+            lowBtn.setAttribute('aria-pressed', lowBtn.getAttribute('aria-pressed') === 'true' ? 'false' : 'true');
+            apply();
+        });
+    })();
+</script>
+{% endblock %}

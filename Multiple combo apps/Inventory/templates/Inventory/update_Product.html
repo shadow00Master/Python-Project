@@ -1,0 +1,22 @@
+{% extends 'base.html' %}
+{% block title %}Edit product{% endblock %}
+{% block breadcrumb %}Edit product{% endblock %}
+{% block content %}
+<div class="form-layout">
+    <section class="page-heading">
+        <div><div class="eyebrow">Product setup</div><h1>Edit product</h1><p>Update details and keep your inventory accurate.</p></div>
+    </section>
+    <section class="form-panel">
+        <h2>Product details</h2>
+        <p>Make changes to the product information below.</p>
+        <form method="post">
+            {% csrf_token %}
+            {% include 'partials/form_fields.html' with grid_class='is-product' %}
+            <div class="form-actions">
+                <a class="btn btn-outline" href="{% url 'Inventory:all_Product' %}">Cancel</a>
+                <button class="btn btn-primary" type="submit">Save changes <svg class="i" aria-hidden="true"><use href="#i-arrow"/></svg></button>
+            </div>
+        </form>
+    </section>
+</div>
+{% endblock %}

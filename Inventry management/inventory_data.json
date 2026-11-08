@@ -1,0 +1,26 @@
+[
+  {
+    "type": "TextileProduct",
+    "product_id": "BS001",
+    "name": "Cotton Bedsheet (King)",
+    "price": 1800.0,
+    "quantity": 24,
+    "fabric": "Cotton"
+  },
+  {
+    "type": "TextileProduct",
+    "product_id": "PL001",
+    "name": "Microfiber Pillow",
+    "price": 650.0,
+    "quantity": 40,
+    "fabric": "Cotton"
+  },
+  {
+    "type": "ClearanceProduct",
+    "product_id": "BL001",
+    "name": "Winter Blanket - Last Season",
+    "price": 2200.0,
+    "quantity": 10,
+    "discount_percent": 30
+  }
+]

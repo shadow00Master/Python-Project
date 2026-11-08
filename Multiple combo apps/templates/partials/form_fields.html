@@ -1,0 +1,28 @@
+{% if form.non_field_errors %}<div class="form-errors" role="alert">{{ form.non_field_errors }}</div>{% endif %}
+{% for field in form.hidden_fields %}{{ field }}{% endfor %}
+<div class="form-grid {{ grid_class }}">
+    {% for field in form.visible_fields %}
+        <div class="field field-{{ field.name }}{% if field.errors %} has-error{% endif %}">
+            <label for="{{ field.id_for_label }}">{% if field.name == 'product_id' %}Product ID{% elif field.name == 'qty' %}Quantity in stock{% elif field.name == 'discription' %}Description{% elif field.name == 'due_date' %}Due date{% else %}{{ field.label }}{% endif %}{% if field.field.required %} <span class="req" aria-hidden="true">*</span>{% endif %}</label>
+            {{ field }}
+            {% if field.help_text %}<span class="helptext">{{ field.help_text }}</span>{% endif %}
+            {{ field.errors }}
+        </div>
+    {% endfor %}
+</div>
+<script>
+    (function () {
+        var hints = {
+            id_product_id: 'e.g. SKU-001', id_name: 'Product name', id_price: '0', id_qty: '0',
+            id_title: 'What needs doing?', id_discription: 'Optional details'
+        };
+        Object.keys(hints).forEach(function (id) {
+            var el = document.getElementById(id);
+            if (el && !el.placeholder) el.placeholder = hints[id];
+        });
+        var cat = document.getElementById('id_category');
+        if (cat && !cat.placeholder) cat.placeholder = document.querySelector('.form-grid.is-task') ? 'e.g. Operations' : 'e.g. Stationery';
+        var due = document.getElementById('id_due_date');
+        if (due) due.type = 'date';
+    })();
+</script>

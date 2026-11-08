@@ -1,0 +1,118 @@
+{% extends 'base.html' %}
+{% block title %}To-do list{% endblock %}
+{% block breadcrumb %}To-do list{% endblock %}
+{% block content %}
+<section class="page-heading">
+    <div>
+        <div class="eyebrow">Stay on top of it</div>
+        <h1>Your to-do list</h1>
+        <p>Keep upcoming work visible and your day moving forward.</p>
+    </div>
+    <a class="btn btn-primary" href="{% url 'TODO:add_task' %}"><svg class="i" aria-hidden="true"><use href="#i-plus"/></svg> Add task</a>
+</section>
+
+<section class="stats-grid is-three" aria-label="Task summary">
+    <article class="stat-card"><span class="stat-label">Tasks on your list</span><strong class="stat-value" id="stat-total">{{ task|length }}</strong><span class="stat-sub">all categories</span></article>
+    <article class="stat-card tone-bad"><span class="stat-label">Overdue</span><strong class="stat-value" id="stat-overdue">0</strong><span class="stat-sub">past their due date</span></article>
+    <article class="stat-card tone-warn"><span class="stat-label">Due in 7 days</span><strong class="stat-value" id="stat-week">0</strong><span class="stat-sub">including today</span></article>
+</section>
+
+<section class="inventory-panel" aria-labelledby="tasks-title">
+    <div class="panel-heading">
+        <div><h2 id="tasks-title">All tasks</h2><p>Your tasks, categories, and due dates in one place</p></div>
+        <span class="count-pill">{{ task|length }} task{{ task|length|pluralize }}</span>
+    </div>
+    {% if task %}
+        <div class="table-tools">
+            <label class="search-wrap">
+                <svg class="i" aria-hidden="true"><use href="#i-search"/></svg>
+                <input class="form-control" id="task-search" type="search" placeholder="Search tasks..." aria-label="Search tasks">
+            </label>
+            <select class="form-select" id="task-category" aria-label="Filter by category"><option value="">All categories</option></select>
+        </div>
+        <div class="table-responsive">
+            <table class="data-table task-table">
+                <thead><tr><th scope="col">Task</th><th scope="col">Category</th><th scope="col">Due date</th><th scope="col">Added</th><th scope="col">Actions</th></tr></thead>
+                <tbody id="task-rows">
+                    {% for task_item in task %}
+                        <tr data-category="{{ task_item.category|lower }}" data-label="{{ task_item.category }}" data-due="{{ task_item.due_date|date:'Y-m-d' }}" data-search="{{ task_item.title|lower }} {{ task_item.discription|lower }} {{ task_item.category|lower }}">
+                            <td><div class="product-cell"><strong>{{ task_item.title }}</strong>{% if task_item.discription %}<small>{{ task_item.discription|truncatechars:90 }}</small>{% endif %}</div></td>
+                            <td><span class="category-pill">{{ task_item.category }}</span></td>
+                            <td><span class="task-due">{{ task_item.due_date|date:"M j, Y" }}</span></td>
+                            <td>{{ task_item.created_at|date:"M j, Y" }}</td>
+                            <td><div class="actions">
+                                <a class="action-link" href="{% url 'TODO:edit_task' pk=task_item.pk %}" aria-label="Edit {{ task_item.title }}" title="Edit task"><svg class="i" aria-hidden="true"><use href="#i-edit"/></svg></a>
+                                <form action="{% url 'TODO:delete_task' pk=task_item.pk %}" method="post" onsubmit="return confirm('Delete this task?')">
+                                    {% csrf_token %}<button class="delete-button" type="submit" aria-label="Delete {{ task_item.title }}" title="Delete task"><svg class="i" aria-hidden="true"><use href="#i-trash"/></svg></button>
+                                </form>
+                            </div></td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        <div class="no-results" id="no-results">No tasks match your search.</div>
+    {% else %}
+        <div class="empty-state">
+            <span class="empty-icon" aria-hidden="true"><svg class="i"><use href="#i-check"/></svg></span>
+            <h3>A clear list starts here</h3>
+            <p>Add a task and give it a due date to stay organized.</p>
+            <a class="btn btn-primary" href="{% url 'TODO:add_task' %}"><svg class="i" aria-hidden="true"><use href="#i-plus"/></svg> Add your first task</a>
+        </div>
+    {% endif %}
+</section>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    (function () {
+        var rows = [].slice.call(document.querySelectorAll('#task-rows tr'));
+        if (!rows.length) return;
+        var d = new Date();
+        var today = new Date(d.getFullYear(), d.getMonth(), d.getDate());
+        var overdue = 0, week = 0;
+        rows.forEach(function (r) {
+            var p = (r.dataset.due || '').split('-');
+            if (p.length !== 3) return;
+            var due = new Date(+p[0], +p[1] - 1, +p[2]);
+            var diff = Math.round((due - today) / 86400000);
+            var badge = null;
+            if (diff < 0) { overdue += 1; badge = ['is-overdue', diff === -1 ? '1 day overdue' : (-diff) + ' days overdue']; }
+            else if (diff === 0) { week += 1; badge = ['is-today', 'Due today']; }
+            else if (diff <= 7) { week += 1; if (diff <= 3) badge = ['is-soon', 'In ' + diff + ' day' + (diff > 1 ? 's' : '')]; }
+            if (badge) {
+                var s = document.createElement('span');
+                s.className = 'due-badge ' + badge[0];
+                s.textContent = badge[1];
+                r.querySelector('.task-due').insertAdjacentElement('afterend', s);
+            }
+        });
+        document.getElementById('stat-overdue').textContent = overdue;
+        document.getElementById('stat-week').textContent = week;
+
+        var search = document.getElementById('task-search');
+        var cat = document.getElementById('task-category');
+        var none = document.getElementById('no-results');
+        var seen = {};
+        rows.forEach(function (r) {
+            if (!seen[r.dataset.category]) {
+                seen[r.dataset.category] = 1;
+                var o = document.createElement('option');
+                o.value = r.dataset.category; o.textContent = r.dataset.label;
+                cat.appendChild(o);
+            }
+        });
+        function apply() {
+            var q = search.value.trim().toLowerCase(), c = cat.value, visible = 0;
+            rows.forEach(function (r) {
+                var ok = r.dataset.search.indexOf(q) !== -1 && (!c || r.dataset.category === c);
+                r.hidden = !ok;
+                if (ok) visible += 1;
+            });
+            none.style.display = visible ? 'none' : 'block';
+        }
+        search.addEventListener('input', apply);
+        cat.addEventListener('change', apply);
+    })();
+</script>
+{% endblock %}

@@ -1,0 +1,44 @@
+{% extends 'Authentication/base_auth.html' %}
+{% block title %}Choose your workspace{% endblock %}
+{% block frame_class %}auth-frame--single{% endblock %}
+{% block header_action %}
+<span class="auth-header-copy">Signed in as <strong>{{ request.user.username }}</strong></span>
+<form class="auth-logout-form" action="{% url 'Authentication:logout_view' %}" method="post">
+    {% csrf_token %}<button class="auth-header-link auth-logout" type="submit">Sign out</button>
+</form>
+{% endblock %}
+{% block content %}
+<section class="dashboard-welcome">
+    <div class="auth-eyebrow"><span class="auth-eyebrow-dot"></span> Your workspace</div>
+    <h1>What would you like to work on, {{ request.user.username }}?</h1>
+    <p>Choose an area to jump in. Everything here belongs to your account only.</p>
+</section>
+<section class="workspace-grid" aria-label="Choose an app">
+    <article class="workspace-card inventory-workspace">
+        <div class="workspace-card-top">
+            <span class="workspace-icon" aria-hidden="true"><svg class="i"><use href="#i-box"/></svg></span>
+            <span class="workspace-label">Stock control</span>
+        </div>
+        <h2>Inventory</h2>
+        <p>Track products, quantities, categories, and stock value from one clear view.</p>
+        <div class="workspace-count"><strong>{{ request.user.inventory_products.count }}</strong> product{{ request.user.inventory_products.count|pluralize }}</div>
+        <div class="workspace-actions">
+            <a class="workspace-button" href="{% url 'Inventory:all_Product' %}">Open inventory <svg class="i" aria-hidden="true"><use href="#i-arrow"/></svg></a>
+            <a class="workspace-quick" href="{% url 'Inventory:add_Product' %}"><svg class="i" aria-hidden="true"><use href="#i-plus"/></svg> Add product</a>
+        </div>
+    </article>
+    <article class="workspace-card todo-workspace">
+        <div class="workspace-card-top">
+            <span class="workspace-icon" aria-hidden="true"><svg class="i"><use href="#i-check"/></svg></span>
+            <span class="workspace-label">Daily flow</span>
+        </div>
+        <h2>To-do list</h2>
+        <p>Organize your work, set due dates, and keep the next action in sight.</p>
+        <div class="workspace-count"><strong>{{ request.user.todo_tasks.count }}</strong> task{{ request.user.todo_tasks.count|pluralize }}</div>
+        <div class="workspace-actions">
+            <a class="workspace-button" href="{% url 'TODO:all_task' %}">Open to-dos <svg class="i" aria-hidden="true"><use href="#i-arrow"/></svg></a>
+            <a class="workspace-quick" href="{% url 'TODO:add_task' %}"><svg class="i" aria-hidden="true"><use href="#i-plus"/></svg> Add task</a>
+        </div>
+    </article>
+</section>
+{% endblock %}
